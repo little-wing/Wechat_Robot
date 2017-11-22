@@ -7,8 +7,7 @@ from wxbot import *
 
 class myWechatBot(WXBot):
 
-#	wechat_DB = 'D:\SQLite\DB_Files\wechatBotDB.db'
-
+	wechat_DB = 'D:\SQLite\DB_Files\wechatBotDB.db'
 	def handle_msg_all(self, msg):
 #		print msg
 		print "=========================================================================="
@@ -20,11 +19,12 @@ class myWechatBot(WXBot):
 		if msg['msg_type_id'] == 4:
 			print "******************"
 			print msg['user']['id']
+			print msg['user']['name']
 			print "******************"
 			
 			# Connect DB. 
-			wechat_DB = 'D:\SQLite\DB_Files\wechatBotDB.db'
-			conn = sqlite3.connect(wechat_DB)
+#			wechat_DB = 'D:\SQLite\DB_Files\wechatBotDB.db'
+			conn = sqlite3.connect(self.wechat_DB)
 			cur = conn.cursor()
 			
 			# Collect user id. Comment this block out when collect user data is done.
@@ -37,15 +37,17 @@ class myWechatBot(WXBot):
 				time_stamp = time.time()
 				current_date = time.strftime("%Y-%m-%d", time.localtime())	
 				current_time = time.strftime("%H:%M:%S", time.localtime())
-				insert_chatHistory = (time_stamp, msg['user']['id'], current_date, current_time, msg['content']['data'])
-#				print insert_value
-				cur.execute("INSERT INTO chat_history VALUES (?, ?, ?, ?, ?)", insert_chatHistory)
+#				insert_chatHistory = (time_stamp, msg['user']['id'], current_date, current_time, msg['content']['data'])
+#				cur.execute("INSERT INTO chat_history VALUES (?, ?, ?, ?, ?)", insert_chatHistory)
+				cur.execute("INSERT INTO chat_history VALUES (?, ?, ?, ?, ?)", (time_stamp, msg['user']['id'], current_date, current_time, msg['content']['data']))
 				conn.commit()		
 				
 				
 			if msg['content']['data'] == 'today':
 				current_date = time.strftime("%Y-%m-%d", time.localtime())
 				teacher_instruction = cur.execute("SELECT CONTENT FROM chat_history WHERE DATE=?", (current_date,))
+				for line in teacher_instruction:
+					print line
 
 		conn.close()
 #			print msg['user']['name']
