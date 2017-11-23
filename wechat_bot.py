@@ -49,7 +49,7 @@ class myWechatBot(WXBot):
 				for line in teacher_instruction:
 					print line
 
-		conn.close()
+			conn.close()
 #			print msg['user']['name']
 #			self.send_msg(msg['user']['name'], msg['content']['data'])
 #			self.send_msg_by_uid("群聊消息收到", msg['user']['id'])
