@@ -49,13 +49,12 @@ class myWechatBot(WXBot):
 			time_stamp = time.time()
 			current_date = time.strftime("%Y-%m-%d", time.localtime())	
 			current_time = time.strftime("%H:%M:%S", time.localtime())
-			cur.execute("INSERT INTO chat_history VALUES (?, ?, ?, ?, ?)", (time_stamp, msg['user']['id'], current_date, current_time, msg['content']['data'],))
+			cur.execute("INSERT INTO chat_history VALUES (?, ?, ?, ?, ?)", (time_stamp, msg['content']['user']['id'], current_date, current_time, msg['content']['data'],))
 			conn.commit()	
 			conn.close()			
 				
 				
 		if msg['msg_type_id'] == 4:
-			input_pattern = '^("\w+")(,"\w+"){0,49}$'
 			if re.match('^\s*today\s*', msg['content']['data']):
 			#if msg['content']['data'] == 'today':
 				today_date = time.strftime("%Y-%m-%d", time.localtime())
