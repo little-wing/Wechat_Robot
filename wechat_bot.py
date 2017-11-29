@@ -11,7 +11,7 @@ class myWechatBot(WXBot):
 #	wechat_DB = 'D:\SQLite\DB_Files\wechatBotDB.db'
 	wechat_DB = './wechatBotDB.db'
 	
-	def query_teacher_instruction(self, query_date):
+	def query_teacher_instruction(self, msg, query_date):
 		conn = sqlite3.connect(self.wechat_DB)
 		cur = conn.cursor()
 		teacher_instruction = cur.execute("SELECT TIME, CONTENT FROM chat_history WHERE DATE=?", (query_date,))
@@ -31,8 +31,8 @@ class myWechatBot(WXBot):
 		if msg['msg_type_id'] == 3:
 #		if msg['msg_type_id'] == 4:
 			print "******************"
-			print msg['user']['id']
-			print msg['user']['name']
+			print msg['content']['user']['id']
+			print msg['content']['user']['name']
 			print "******************"
 			
 			# Connect DB. 
@@ -41,8 +41,7 @@ class myWechatBot(WXBot):
 			cur = conn.cursor()
 			
 			# Collect user id. Comment this block out when collect user data is done.
-			insert_userData = (msg['user']['id'], msg['user']['name'])
-			cur.execute("INSERT OR IGNORE INTO id_list VALUES (?, ?)", insert_userData)
+			cur.execute("INSERT OR IGNORE INTO id_list VALUES (?, ?)", (msg['content']['user']['id'], msg['content']['user']['name'],))
 			
 			# Insert data into DB
 			# time_stamp is the primary key in chat_history
@@ -60,11 +59,11 @@ class myWechatBot(WXBot):
 			if re.match('^\s*today\s*', msg['content']['data']):
 			#if msg['content']['data'] == 'today':
 				today_date = time.strftime("%Y-%m-%d", time.localtime())
-				reply_instruction = query_teacher_instruction(today_date)
+				reply_instruction = self.query_teacher_instruction(msg, today_date)
 			elif re.match('^\s*yesterday\s*', msg['content']['data']):
 			#elif msg['content']['data'] == 'yesterday':
 				yesterday_date = str(datetime.date.today() - datetime.timedelta(days - 1))
-				reply_instruction = query_teacher_instruction(yesterday_date)
+				reply_instruction = self.query_teacher_instruction(msg, yesterday_date)
 
 #			print msg['user']['name']
 #			self.send_msg(msg['user']['name'], msg['content']['data'])
