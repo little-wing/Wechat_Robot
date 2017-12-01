@@ -15,21 +15,27 @@ class myWechatBot(WXBot):
 		conn = sqlite3.connect(self.wechat_DB)
 		cur = conn.cursor()
 		teacher_instruction = cur.execute("SELECT TIME, CONTENT FROM chat_history WHERE DATE=?", (query_date,))
+		output_list = teacher_instruction.fetchall()
 		output_str = ""
-		for line in teacher_instruction:
-			output_str = output_str + line[0] + '\n' + line[1] + '\n\n'	
-		self.send_msg_by_uid(output_str, msg['user']['id'])
+		
+		if output_list.__len__() != 0:
+			for item in output_list:
+				output_str = output_str + item[0] + '\n' + item[1] + '\n\n'	
+			self.send_msg_by_uid(output_str, msg['user']['id'])
+		else
+			output_str = "No data."
+			
 		conn.close()	
 	
 	def handle_msg_all(self, msg):
 		print "=========================================================================="
-		print msg
+		#print msg
 		for (k, v) in msg.items():
 			print "%s => %s" % (k, v)
 			
 		# group msg_type_id = 3, contact msg_type_id = 4
-		if msg['msg_type_id'] == 3:
-#		if msg['msg_type_id'] == 4:
+		if msg['msg_type_id'] == 3 and msg['content']['msg_type_id'] == 0:
+#		if msg['msg_type_id'] == 4 and msg['content']['msg_type_id'] == 0:
 			print "******************"
 			print msg['content']['user']['id']
 			print msg['content']['user']['name']
@@ -55,18 +61,16 @@ class myWechatBot(WXBot):
 				
 				
 		if msg['msg_type_id'] == 4:
-			if re.match('^\s*today\s*', msg['content']['data']):
-			#if msg['content']['data'] == 'today':
+			if re.match('^\s*today\s*$', msg['content']['data']):
 				today_date = time.strftime("%Y-%m-%d", time.localtime())
 				reply_instruction = self.query_teacher_instruction(msg, today_date)
-			elif re.match('^\s*yesterday\s*', msg['content']['data']):
-			#elif msg['content']['data'] == 'yesterday':
+			elif re.match('^\s*yesterday\s*$', msg['content']['data']):
 				yesterday_date = str(datetime.date.today() - datetime.timedelta(days - 1))
 				reply_instruction = self.query_teacher_instruction(msg, yesterday_date)
 
 #			print msg['user']['name']
 #			self.send_msg(msg['user']['name'], msg['content']['data'])
-#			self.send_msg_by_uid("群聊消息收到", msg['user']['id'])
+#			self.send_msg_by_uid("message received", msg['user']['id'])
 
 ##########################################################################################################
 		# Code block for forwarding pic(gaowc)
