@@ -22,7 +22,7 @@ class myWechatBot(WXBot):
 			for item in output_list:
 				output_str = output_str + item[0] + '\n' + item[1] + '\n\n'	
 			self.send_msg_by_uid(output_str, msg['user']['id'])
-		else
+		else:
 			output_str = "No data."
 			
 		conn.close()	
@@ -34,11 +34,13 @@ class myWechatBot(WXBot):
 			print "%s => %s" % (k, v)
 			
 		# group msg_type_id = 3, contact msg_type_id = 4
-		if msg['msg_type_id'] == 3 and msg['content']['msg_type_id'] == 0:
-#		if msg['msg_type_id'] == 4 and msg['content']['msg_type_id'] == 0:
+		if msg['msg_type_id'] == 3 and msg['content']['type'] == 0:
+#		if msg['msg_type_id'] == 4 and msg['content']['type'] == 0:
 			print "******************"
 			print msg['content']['user']['id']
 			print msg['content']['user']['name']
+			name_list = self.get_group_member_name(msg['user']['id'], msg['content']['user']['id'])
+			print name_list
 			print "******************"
 			
 			# Connect DB. 
@@ -47,7 +49,7 @@ class myWechatBot(WXBot):
 			cur = conn.cursor()
 			
 			# Collect user id. Comment this block out when collect user data is done.
-			cur.execute("INSERT OR IGNORE INTO id_list VALUES (?, ?)", (msg['content']['user']['id'], msg['content']['user']['name'],))
+			#cur.execute("INSERT OR IGNORE INTO id_list VALUES (?, ?)", (msg['content']['user']['id'], msg['content']['user']['name'],))
 			
 			# Insert data into DB
 			# time_stamp is the primary key in chat_history
@@ -55,7 +57,7 @@ class myWechatBot(WXBot):
 			time_stamp = time.time()
 			current_date = time.strftime("%Y-%m-%d", time.localtime())	
 			current_time = time.strftime("%H:%M:%S", time.localtime())
-			cur.execute("INSERT INTO chat_history VALUES (?, ?, ?, ?, ?)", (time_stamp, msg['content']['user']['id'], current_date, current_time, msg['content']['data'],))
+			cur.execute("INSERT INTO chat_history VALUES (?, ?, ?, ?, ?, ?, ?)", (time_stamp, msg['content']['user']['id'], name_list['display_name'], name_list['nickname'], current_date, current_time, msg['content']['data'],))
 			conn.commit()	
 			conn.close()			
 				
@@ -74,8 +76,8 @@ class myWechatBot(WXBot):
 
 ##########################################################################################################
 		# Code block for forwarding pic(gaowc)
-		if msg['content']['type'] == 3:
-			received_file = self.get_msg_img(msg['msg_id'])
+		#if msg['content']['type'] == 3:
+		#	received_file = self.get_msg_img(msg['msg_id'])
 			
 
 def main():
