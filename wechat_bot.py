@@ -4,12 +4,17 @@ import re
 import time
 import sqlite3
 import datetime
+import smtplib
+from email.mime.text import MIMEText
+from email.header import Header
+from email.mime.multipart import MIMEMultipart
+from email.mime.image import MIMEImage
 from wxbot import *
 
 class myWechatBot(WXBot):
 
-#	wechat_DB = 'D:\SQLite\DB_Files\wechatBotDB.db'
 	wechat_DB = './wechatBotDB.db'
+	base_dir = 'D:\Python\Project\wechat_bot\Wechat_Robot-little-wing-patch-2'
 	
 	def query_teacher_instruction(self, msg, query_date):
 		conn = sqlite3.connect(self.wechat_DB)
@@ -21,17 +26,55 @@ class myWechatBot(WXBot):
 		if output_list.__len__() != 0:
 			for item in output_list:
 				output_str = output_str + item[0] + '\n' + item[1] + '\n\n'	
-			self.send_msg_by_uid(output_str, msg['user']['id'])
 		else:
 			output_str = "No data."
 			
+		self.send_msg_by_uid(output_str, msg['user']['id'])	
 		conn.close()	
+		
+	def send_img_mail(self, file_loc):
+		mail_host = "smtp.sina.cn"
+		mail_user = "benyu_2017@sina.cn"
+		mail_passwd = "@Spatial1"	
+		sender = 'benyu_2017@sina.cn'
+		receiver = 'Ben.Yu@nokia-sbell.com'
+		
+		msgRoot = MIMEMultipart('related')
+		msgRoot['From'] = Header('benyu_2017@sina.cn')
+		msgRoot['To'] = Header('Ben.Yu@nokia-sbell.com')
+		subject = 'Forwarded image from wechat'
+		msgRoot['Subject'] = Header(subject)
+		
+		msgAlternative = MIMEMultipart('alternative')
+		msgRoot.attach(msgAlternative)
+		mail_msg = """
+		<p>Image from wechat</p>
+		<p><img src="cid:image1"></p>
+		"""
+		msgAlternative.attach(MIMEText(mail_msg, 'html'))
+		fp = open(file_loc, 'rb')
+		print "[INFO] Image is located at %s" % file_loc
+		msgImage = MIMEImage(fp.read())
+		fp.close()
+		
+		msgImage.add_header('Content-ID', '<image1>')
+		msgRoot.attach(msgImage)
+		
+		try:
+			smtpObj = smtplib.SMTP()
+			smtpObj.connect(mail_host, 25)
+			smtpObj.login(mail_user, mail_passwd)
+			smtpObj.sendmail(sender, receiver, msgRoot.as_string())
+			print "[INFO] Mail is sent."
+		except smtplib.SMTPException:
+			print "[Error] Mail cannot be sent."
 	
 	def handle_msg_all(self, msg):
 		print "=========================================================================="
 		#print msg
+		print "[INFO] Display msg details:"
 		for (k, v) in msg.items():
-			print "%s => %s" % (k, v)
+			print "	%s => %s" % (k, v)
 			
 		# group msg_type_id = 3, contact msg_type_id = 4
 		if msg['msg_type_id'] == 3 and msg['content']['type'] == 0:
@@ -74,11 +117,11 @@ class myWechatBot(WXBot):
 #			self.send_msg(msg['user']['name'], msg['content']['data'])
 #			self.send_msg_by_uid("message received", msg['user']['id'])
 
-##########################################################################################################
-		# Code block for forwarding pic(gaowc)
-		#if msg['content']['type'] == 3:
-		#	received_file = self.get_msg_img(msg['msg_id'])
-			
+		# Forward image to Gaowc
+		if msg['content']['type'] == 3:
+			received_file = ''
+			received_file = self.base_dir + '\\temp\\' + self.get_msg_img(msg['msg_id'])
+			self.send_img_mail(received_file)
 
 def main():
 	bot = myWechatBot()
