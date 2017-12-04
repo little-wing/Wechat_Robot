@@ -5,6 +5,7 @@ import time
 import sqlite3
 import datetime
 import smtplib
+import os
 from email.mime.text import MIMEText
 from email.header import Header
 from email.mime.multipart import MIMEMultipart
@@ -14,7 +15,8 @@ from wxbot import *
 class myWechatBot(WXBot):
 
 	wechat_DB = './wechatBotDB.db'
-	base_dir = 'D:\Python\Project\wechat_bot\Wechat_Robot-little-wing-patch-2'
+	# base_dir = 'D:\Python\Project\wechat_bot\Wechat_Robot-little-wing-patch-2'
+	base_dir = os.getcwd()
 	
 	def query_teacher_instruction(self, msg, query_date):
 		conn = sqlite3.connect(self.wechat_DB)
@@ -32,7 +34,18 @@ class myWechatBot(WXBot):
 		self.send_msg_by_uid(output_str, msg['user']['id'])	
 		conn.close()	
 		
-	def send_img_mail(self, file_loc):
+	def send_img_mail(self, img_loc, mail_info):
+		with open(mail_info, "r") as file:
+			for line in file:
+				if re.match('Host:*', line):
+					mail_host = line[line.find(':')+1:].strip(' ').strip('\r\n')
+				elif re.match('From:*', line):
+					mail_sender = line[line.find(':')+1:].strip(' ').strip('\r\n')
+				elif re.match('Passwd:*', line):
+					mail_passwd = line[line.find(':')+1:].strip(' ').strip('\r\n')
+				elif re.match('To:*', line):
+					mail_receiver = line[line.find(':')+1:].strip(' ').strip('\r\n')
+		'''
 		mail_host = "smtp.sina.cn"
 		mail_user = "benyu_2017@sina.cn"
 		mail_passwd = "XXXXXXXX"	
@@ -44,6 +57,12 @@ class myWechatBot(WXBot):
 		msgRoot['To'] = Header('Ben.Yu@nokia-sbell.com')
 		subject = 'Forwarded image from wechat'
 		msgRoot['Subject'] = Header(subject)
+		'''
+		msgRoot = MIMEMultipart('related')
+		msgRoot['From'] = Header(mail_sender)
+		msgRoot['To'] = Header(mail_receiver)
+		subject = 'Forwarded image from wechat'
+		msgRoot['Subject'] = Header(subject)		
 		
 		msgAlternative = MIMEMultipart('alternative')
 		msgRoot.attach(msgAlternative)
@@ -52,7 +71,7 @@ class myWechatBot(WXBot):
 		<p><img src="cid:image1"></p>
 		"""
 		msgAlternative.attach(MIMEText(mail_msg, 'html'))
-		fp = open(file_loc, 'rb')
+		fp = open(img_loc, 'r')
 		print "[INFO] Image is located at %s" % file_loc
 		msgImage = MIMEImage(fp.read())
 		fp.close()
@@ -63,15 +82,14 @@ class myWechatBot(WXBot):
 		try:
 			smtpObj = smtplib.SMTP()
 			smtpObj.connect(mail_host, 25)
-			smtpObj.login(mail_user, mail_passwd)
-			smtpObj.sendmail(sender, receiver, msgRoot.as_string())
+			smtpObj.login(mail_sender, mail_passwd)
+			smtpObj.sendmail(mail_sender, mail_receiver, msgRoot.as_string())
 			print "[INFO] Mail is sent."
 		except smtplib.SMTPException:
 			print "[Error] Mail cannot be sent."
 	
 	def handle_msg_all(self, msg):
 		print "=========================================================================="
-		#print msg
 		print "[INFO] Display msg details:"
 		for (k, v) in msg.items():
 			print "	%s => %s" % (k, v)
@@ -87,7 +105,6 @@ class myWechatBot(WXBot):
 			print "******************"
 			
 			# Connect DB. 
-#			wechat_DB = 'D:\SQLite\DB_Files\wechatBotDB.db'
 			conn = sqlite3.connect(self.wechat_DB)
 			cur = conn.cursor()
 			
@@ -102,9 +119,9 @@ class myWechatBot(WXBot):
 			current_time = time.strftime("%H:%M:%S", time.localtime())
 			cur.execute("INSERT INTO chat_history VALUES (?, ?, ?, ?, ?, ?, ?)", (time_stamp, msg['content']['user']['id'], name_list['display_name'], name_list['nickname'], current_date, current_time, msg['content']['data'],))
 			conn.commit()	
-			conn.close()			
-				
-				
+			conn.close()				
+		
+		# Send selected data according to users' query
 		if msg['msg_type_id'] == 4:
 			if re.match('^\s*today\s*$', msg['content']['data']):
 				today_date = time.strftime("%Y-%m-%d", time.localtime())
@@ -113,15 +130,14 @@ class myWechatBot(WXBot):
 				yesterday_date = str(datetime.date.today() - datetime.timedelta(days - 1))
 				reply_instruction = self.query_teacher_instruction(msg, yesterday_date)
 
-#			print msg['user']['name']
-#			self.send_msg(msg['user']['name'], msg['content']['data'])
-#			self.send_msg_by_uid("message received", msg['user']['id'])
+
 
 		# Forward image to Gaowc
 		if msg['content']['type'] == 3:
-			received_file = ''
-			received_file = self.base_dir + '\\temp\\' + self.get_msg_img(msg['msg_id'])
-			self.send_img_mail(received_file)
+			received_img = ''
+			received_img = self.base_dir + '\\temp\\' + self.get_msg_img(msg['msg_id'])
+			mail_info = self.base_dir + '\\mail_info.txt'
+			self.send_img_mail(received_img, mail_info)
 
 def main():
 	bot = myWechatBot()
