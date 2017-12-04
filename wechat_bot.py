@@ -35,7 +35,7 @@ class myWechatBot(WXBot):
 	def send_img_mail(self, file_loc):
 		mail_host = "smtp.sina.cn"
 		mail_user = "benyu_2017@sina.cn"
-		mail_passwd = "@Spatial1"	
+		mail_passwd = "XXXXXXXX"	
 		sender = 'benyu_2017@sina.cn'
 		receiver = 'Ben.Yu@nokia-sbell.com'
 		
