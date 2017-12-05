@@ -72,7 +72,7 @@ class myWechatBot(WXBot):
 		"""
 		msgAlternative.attach(MIMEText(mail_msg, 'html'))
 		fp = open(img_loc, 'r')
-		print "[INFO] Image is located at %s" % file_loc
+		print "[INFO] Image is located at %s" % img_loc
 		msgImage = MIMEImage(fp.read())
 		fp.close()
 		
