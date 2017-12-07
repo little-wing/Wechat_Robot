@@ -39,12 +39,16 @@ class myWechatBot(WXBot):
 			for line in file:
 				if re.match('Host:*', line):
 					mail_host = line[line.find(':')+1:].strip(' ').strip('\r\n')
+					print "[INFO] mail_host is %s" % mail_host
 				elif re.match('From:*', line):
 					mail_sender = line[line.find(':')+1:].strip(' ').strip('\r\n')
+					print "[INFO] mail_sender is %s" % mail_sender
 				elif re.match('Passwd:*', line):
 					mail_passwd = line[line.find(':')+1:].strip(' ').strip('\r\n')
+					print "[INFO] mail_passwd is %s" % mail_passwd
 				elif re.match('To:*', line):
 					mail_receiver = line[line.find(':')+1:].strip(' ').strip('\r\n')
+					print "[INFO] mail_receiver is %s" % mail_receiver
 		'''
 		mail_host = "smtp.sina.cn"
 		mail_user = "benyu_2017@sina.cn"
@@ -71,7 +75,7 @@ class myWechatBot(WXBot):
 		<p><img src="cid:image1"></p>
 		"""
 		msgAlternative.attach(MIMEText(mail_msg, 'html'))
-		fp = open(img_loc, 'r')
+		fp = open(img_loc, 'rb')
 		print "[INFO] Image is located at %s" % img_loc
 		msgImage = MIMEImage(fp.read())
 		fp.close()
@@ -100,6 +104,7 @@ class myWechatBot(WXBot):
 			print "******************"
 			print msg['content']['user']['id']
 			print msg['content']['user']['name']
+			#name_list = self.get_group_member_name(msg['user']['id'], msg['content']['user']['id'])
 			name_list = self.get_group_member_name(msg['user']['id'], msg['content']['user']['id'])
 			print name_list
 			print "******************"
@@ -123,21 +128,23 @@ class myWechatBot(WXBot):
 		
 		# Send selected data according to users' query
 		if msg['msg_type_id'] == 4:
-			if re.match('^\s*today\s*$', msg['content']['data']):
-				today_date = time.strftime("%Y-%m-%d", time.localtime())
-				reply_instruction = self.query_teacher_instruction(msg, today_date)
-			elif re.match('^\s*yesterday\s*$', msg['content']['data']):
-				yesterday_date = str(datetime.date.today() - datetime.timedelta(days - 1))
-				reply_instruction = self.query_teacher_instruction(msg, yesterday_date)
+			if msg['user']['name'] == 'gaowc' or msg['user']['name'] == 'BenY':
+				if re.match('^\s*today\s*$', msg['content']['data']):
+					today_date = time.strftime("%Y-%m-%d", time.localtime())
+					reply_instruction = self.query_teacher_instruction(msg, today_date)
+				elif re.match('^\s*yesterday\s*$', msg['content']['data']):
+					yesterday_date = str(datetime.date.today() - datetime.timedelta(days - 1))
+					reply_instruction = self.query_teacher_instruction(msg, yesterday_date)
 
 
 
 		# Forward image to Gaowc
 		if msg['content']['type'] == 3:
-			received_img = ''
-			received_img = self.base_dir + '\\temp\\' + self.get_msg_img(msg['msg_id'])
-			mail_info = self.base_dir + '\\mail_info.txt'
-			self.send_img_mail(received_img, mail_info)
+			if msg['user']['name'] == 'gaowc' or msg['user']['name'] == 'BenY':
+				received_img = ''
+				received_img = self.base_dir + '\\temp\\' + self.get_msg_img(msg['msg_id'])
+				mail_info = self.base_dir + '\\mail_info.txt'
+				self.send_img_mail(received_img, mail_info)
 
 def main():
 	bot = myWechatBot()
