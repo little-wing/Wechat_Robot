@@ -122,6 +122,7 @@ class myWechatBot(WXBot):
 			time_stamp = time.time()
 			current_date = time.strftime("%Y-%m-%d", time.localtime())	
 			current_time = time.strftime("%H:%M:%S", time.localtime())
+			# Add exception handling for INSERT
 			cur.execute("INSERT INTO chat_history VALUES (?, ?, ?, ?, ?, ?, ?)", (time_stamp, msg['content']['user']['id'], name_list['display_name'], name_list['nickname'], current_date, current_time, msg['content']['data'],))
 			conn.commit()	
 			conn.close()				
