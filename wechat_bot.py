@@ -18,10 +18,10 @@ class myWechatBot(WXBot):
 	# base_dir = 'D:\Python\Project\wechat_bot\Wechat_Robot-little-wing-patch-2'
 	base_dir = os.getcwd()
 	
-	def query_teacher_instruction(self, msg, query_date):
+	def query_teacher_instruction(self, msg, query_date, teacher):
 		conn = sqlite3.connect(self.wechat_DB)
 		cur = conn.cursor()
-		teacher_instruction = cur.execute("SELECT TIME, CONTENT FROM chat_history WHERE DATE=?", (query_date,))
+		teacher_instruction = cur.execute("SELECT TIME, CONTENT FROM chat_history WHERE DATE=? and DISPLAY_NAME=?", (query_date, teacher,))
 		output_list = teacher_instruction.fetchall()
 		output_str = ""
 		
@@ -122,7 +122,6 @@ class myWechatBot(WXBot):
 			time_stamp = time.time()
 			current_date = time.strftime("%Y-%m-%d", time.localtime())	
 			current_time = time.strftime("%H:%M:%S", time.localtime())
-			# Add exception handling for INSERT
 			cur.execute("INSERT INTO chat_history VALUES (?, ?, ?, ?, ?, ?, ?)", (time_stamp, msg['content']['user']['id'], name_list['display_name'], name_list['nickname'], current_date, current_time, msg['content']['data'],))
 			conn.commit()	
 			conn.close()				
@@ -130,12 +129,13 @@ class myWechatBot(WXBot):
 		# Send selected data according to users' query
 		if msg['msg_type_id'] == 4:
 			if msg['user']['name'] == 'gaowc' or msg['user']['name'] == 'BenY':
+				teachear_name = '班主任曲老师'
 				if re.match('^\s*today\s*$', msg['content']['data']):
 					today_date = time.strftime("%Y-%m-%d", time.localtime())
-					reply_instruction = self.query_teacher_instruction(msg, today_date)
+					reply_instruction = self.query_teacher_instruction(msg, today_date, teachear_name)
 				elif re.match('^\s*yesterday\s*$', msg['content']['data']):
 					yesterday_date = str(datetime.date.today() - datetime.timedelta(days - 1))
-					reply_instruction = self.query_teacher_instruction(msg, yesterday_date)
+					reply_instruction = self.query_teacher_instruction(msg, yesterday_date, teachear_name)
 
 
 
